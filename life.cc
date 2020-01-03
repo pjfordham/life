@@ -35,13 +35,21 @@ struct Blinker : public Shape {
     ~Blinker();
 };
 
+struct Almond : public Shape {
+    static const char ALMOND_HEIGHT = 4;
+    static const char ALMOND_WIDTH = 3;
+    Almond( char x , char y );
+    ~Almond();
+};
+
 class GameOfLife {
 public:
     GameOfLife();
    void addShape( Shape shape );
-   
+
     void print();
     void update();
+   void clear();
    content_t getContent( int i, int j);
    char getState( char state , char xCoord , char yCoord , bool toggle);
     void iterate(unsigned int iterations);
@@ -61,13 +69,27 @@ GameOfLife::GameOfLife() :
    }
 }
 
+void GameOfLife::clear() {
+   toggle = true;
+   for ( char i = 0; i < HEIGHT; i++ ) {
+      for ( char j = 0; j < WIDTH; j++ ) {
+         world[i][j] = '.';
+      }
+   }
+}
+
 void GameOfLife::addShape( Shape shape )
 {
    for ( char i = shape.yCoord; i - shape.yCoord < shape.height; i++ ) {
       for ( char j = shape.xCoord; j - shape.xCoord < shape.width; j++ ) {
          if ( i < HEIGHT && j < WIDTH ) {
-            world[i][j] =
-               shape.figure[ i - shape.yCoord ][j - shape.xCoord ];
+            if ( toggle ) {
+               world[i][j] =
+                  shape.figure[ i - shape.yCoord ][j - shape.xCoord ];
+            } else {
+               otherWorld[i][j] =
+                  shape.figure[ i - shape.yCoord ][j - shape.xCoord ];
+            }
          }
       }
    }
@@ -223,30 +245,57 @@ Blinker::~Blinker() {
     delete[] figure;
 }
 
+Almond::Almond( char x , char y ) {
+    xCoord = x;
+    yCoord = y;
+    height = ALMOND_HEIGHT;
+    width = ALMOND_WIDTH;
+    figure = new char*[ALMOND_HEIGHT];
+    for ( char i = 0; i < ALMOND_HEIGHT; i++ ) {
+        figure[i] = new char[ALMOND_WIDTH];
+    }
+    for ( char i = 0; i < ALMOND_HEIGHT; i++ ) {
+        for ( char j = 0; j < ALMOND_WIDTH; j++ ) {
+            figure[i][j] = '.';
+        }
+    }
+    figure[0][1] = 'X';
+    figure[1][0] = 'X';
+    figure[1][2] = 'X';
+    figure[2][0] = 'X';
+    figure[2][2] = 'X';
+    figure[3][1] = 'X';
+}
+
+Almond::~Almond() {
+    for ( char i = 0; i < ALMOND_HEIGHT; i++ ) {
+        delete[] figure[i];
+    }
+    delete[] figure;
+}
+
 
 int main()
 {
   sf::RenderWindow window(sf::VideoMode((2+BOARD_SIZE) * (int)TILE_SIZE, (2+BOARD_SIZE) * (int)TILE_SIZE), "Game of Life");
 
-    GameOfLife gol;
-    gol.addShape(Glider(0,0));
-    gol.addShape(Blinker(10,20));
-    gol.addShape(Glider(10,0));
-    gol.addShape(Blinker(20,10));
-    gol.addShape(Glider(0,10));
-    gol.addShape(Blinker(10,30));
-    gol.addShape(Glider(10,10));
-    gol.addShape(Blinker(30,20));
+  GameOfLife gol;
+
+  std::uniform_int_distribution<int> randomLocationRange(0, BOARD_SIZE-1);
+  std::random_device rd;
+  std::mt19937 randomNumbers(rd());
 
   sf::Clock clock;
 
+  bool running = false;
   while (window.isOpen()) {
-    sf::Time elapsed = clock.getElapsedTime();
-    if (elapsed.asSeconds() > 0.01f) {
-      gol.iterate(1);
-      clock.restart();
-    }
-
+     if ( running ) {
+        sf::Time elapsed = clock.getElapsedTime();
+        if (elapsed.asSeconds() > 0.05f) {
+           gol.iterate(1);
+           clock.restart();
+        }
+     }
 
     sf::Event event;
     while (window.pollEvent(event)) {
@@ -258,7 +307,24 @@ int main()
           return 0;
         }
         if (event.key.code == sf::Keyboard::Space){
-          // game.reset();
+        }
+        if (event.key.code == sf::Keyboard::A){
+           gol.addShape(Almond(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
+        }
+        if (event.key.code == sf::Keyboard::G){
+           gol.addShape(Glider(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
+        }
+        if (event.key.code == sf::Keyboard::B){
+           gol.addShape(Blinker(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
+        }
+        if (event.key.code == sf::Keyboard::I){
+           gol.iterate(1);
+        }
+        if (event.key.code == sf::Keyboard::C){
+           gol.clear();
+        }
+        if (event.key.code == sf::Keyboard::R){
+           running = ! running;
         }
         if (event.key.code == sf::Keyboard::Left){
           // game.setDirection( Game::Left );
