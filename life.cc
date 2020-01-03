@@ -2,144 +2,251 @@
 #include <SFML/Graphics.hpp>
 #include <random>
 
+#include <iostream>
+
 const int BOARD_SIZE = 40;
 const float TILE_SIZE = 20.0f;
 
-class Game {
-  int board[BOARD_SIZE][BOARD_SIZE];
-  int length, head_x, head_y;
-  bool dead;
+#define HEIGHT BOARD_SIZE
+#define WIDTH BOARD_SIZE
 
-public:
-
-  enum direction_t {
-    Up, Down, Left, Right };
-  enum content_t {
+enum content_t {
     Snake, Food, Empty, Head };
 
-private:
-  direction_t new_direction;
-  direction_t direction;
-
-  void spawn_food() {
-    std::uniform_int_distribution<int> randomLocationRange(0, BOARD_SIZE-1);
-    std::random_device rd;
-    std::mt19937 randomNumbers(rd());
-    int i = randomLocationRange( randomNumbers );
-    int j = randomLocationRange( randomNumbers );
-    if (          board[i][j] ==  0 )
-      board[i][j] = -1;
-    else
-      spawn_food();
-  }
-
+struct Shape {
 public:
-
-  void setDirection( direction_t dir ) {
-    if ( dir == Left){
-      if (direction != Right)
-        new_direction = Left;
-    }
-    if ( dir == Right){
-      if (direction != Left)
-        new_direction = Right;
-    }
-    if ( dir == Up){
-      if (direction != Down)
-        new_direction = Up;
-    }
-    if ( dir == Down){
-      if (direction != Up)
-        new_direction = Down;
-    }
-  }
-
-  void reset() {
-    dead=false;
-    length=2;
-    for( int i=0;i<BOARD_SIZE;i++ ){
-      for ( int j = 0;j<BOARD_SIZE;j++) {
-        board[i][j] = 0;
-      }
-    }
-    head_x = BOARD_SIZE / 2;
-    head_y = BOARD_SIZE / 2;
-    board[head_x][head_y]=length;
-    direction=Left;
-    new_direction=Left;
-    spawn_food();
-  }
-
-  Game() {
-    reset();
-  }
-
-  content_t getContent(int x, int y) {
-    if (dead) {
-      if (x == head_x && y == head_y) return Head;
-      if (board[x][y] > 0) return Food;
-      if (board[x][y] == -1 ) return Empty;
-      return Snake;
-    } else {
-      if (x == head_x && y == head_y) return Head;
-      if (board[x][y] > 0) return Snake;
-      if (board[x][y] == -1 ) return Food;
-      return Empty;
-    }
-  }
-
-  void iterate() {
-    if (dead) return;
-    direction=new_direction;
-    switch (direction) {
-    case Left: head_x--;break;
-    case Right: head_x++;break;
-    case Up: head_y--;break;
-    case Down: head_y++;break;
-    }
-    if (head_x < 0 || head_y < 0 || head_x == BOARD_SIZE || head_y == BOARD_SIZE) {
-      dead = true;
-      head_x = 0;
-      head_y = 0;
-    }else if ( board[head_x][head_y] >0 ) {
-      dead = true;
-      head_x = 0;
-      head_y = 0;
-    } else{
-      if ( board[head_x][head_y] == -1 ) {
-        length++;
-        spawn_food();
-      }
-      board[head_x][head_y] = 1;
-    }
-    for( int i=0;i<BOARD_SIZE;i++ ) {
-      for ( int j = 0;j<BOARD_SIZE;j++ ) {
-        if (board[i][j] > length) {
-          board[i][j]=0;
-        } else if (board[i][j] > 0) {
-          board[i][j]++;
-        }
-      }
-    }
-  }
-
+    char xCoord;
+    char yCoord;
+    char height;
+    char width;
+    char **figure;
 };
+
+struct Glider : public Shape {
+    static const char GLIDER_SIZE = 3;
+    Glider( char x , char y );
+    ~Glider();
+};
+
+struct Blinker : public Shape {
+    static const char BLINKER_HEIGHT = 3;
+    static const char BLINKER_WIDTH = 1;
+    Blinker( char x , char y );
+    ~Blinker();
+};
+
+class GameOfLife {
+public:
+    GameOfLife();
+   void addShape( Shape shape );
+   
+    void print();
+    void update();
+   content_t getContent( int i, int j);
+   char getState( char state , char xCoord , char yCoord , bool toggle);
+    void iterate(unsigned int iterations);
+private:
+    char world[HEIGHT][WIDTH];
+    char otherWorld[HEIGHT][WIDTH];
+    bool toggle;
+};
+
+GameOfLife::GameOfLife() :
+   toggle(true)
+{
+   for ( char i = 0; i < HEIGHT; i++ ) {
+      for ( char j = 0; j < WIDTH; j++ ) {
+         world[i][j] = '.';
+      }
+   }
+}
+
+void GameOfLife::addShape( Shape shape )
+{
+   for ( char i = shape.yCoord; i - shape.yCoord < shape.height; i++ ) {
+      for ( char j = shape.xCoord; j - shape.xCoord < shape.width; j++ ) {
+         if ( i < HEIGHT && j < WIDTH ) {
+            world[i][j] =
+               shape.figure[ i - shape.yCoord ][j - shape.xCoord ];
+         }
+      }
+   }
+}
+
+void GameOfLife::print() {
+    if ( toggle ) {
+        for ( char i = 0; i < HEIGHT; i++ ) {
+            for ( char j = 0; j < WIDTH; j++ ) {
+                std::cout << world[i][j];
+            }
+            std::cout << std::endl;
+        }
+    } else {
+        for ( char i = 0; i < HEIGHT; i++ ) {
+            for ( char j = 0; j < WIDTH; j++ ) {
+                std::cout << otherWorld[i][j];
+            }
+            std::cout << std::endl;
+        }
+    }
+    for ( char i = 0; i < WIDTH; i++ ) {
+        std::cout << '=';
+    }
+    std::cout << std::endl;
+}
+
+content_t GameOfLife::getContent(int i, int j) {
+   int content;
+   if ( toggle ) {
+      content = world[i][j];
+   } else {
+      content = otherWorld[i][j];
+   }
+   switch (content) {
+   case 'X': return Head;
+   default:
+      return Empty;
+   }
+}
+
+void GameOfLife::update() {
+    if (toggle) {
+        for ( char i = 0; i < HEIGHT; i++ ) {
+            for ( char j = 0; j < WIDTH; j++ ) {
+                otherWorld[i][j] =
+                    GameOfLife::getState(world[i][j] , i , j , toggle);
+            }
+        }
+        toggle = !toggle;
+    } else {
+        for ( char i = 0; i < HEIGHT; i++ ) {
+            for ( char j = 0; j < WIDTH; j++ ) {
+                world[i][j] =
+                    GameOfLife::getState(otherWorld[i][j] , i , j , toggle);
+            }
+        }
+        toggle = !toggle;
+    }
+}
+
+char GameOfLife::getState( char state, char yCoord, char xCoord, bool toggle ) {
+    char neighbors = 0;
+    if ( toggle ) {
+        for ( char i = yCoord - 1; i <= yCoord + 1; i++ ) {
+            for ( char j = xCoord - 1; j <= xCoord + 1; j++ ) {
+                if ( i == yCoord && j == xCoord ) {
+                    continue;
+                }
+                if ( i > -1 && i < HEIGHT && j > -1 && j < WIDTH ) {
+                    if ( world[i][j] == 'X' ) {
+                        neighbors++;
+                    }
+                }
+            }
+        }
+    } else {
+        for ( char i = yCoord - 1; i <= yCoord + 1; i++ ) {
+            for ( char j = xCoord - 1; j <= xCoord + 1; j++ ) {
+                if ( i == yCoord && j == xCoord ) {
+                    continue;
+                }
+                if ( i > -1 && i < HEIGHT && j > -1 && j < WIDTH ) {
+                    if ( otherWorld[i][j] == 'X' ) {
+                        neighbors++;
+                    }
+                }
+            }
+        }
+    }
+    if (state == 'X') {
+        return ( neighbors > 1 && neighbors < 4 ) ? 'X' : '.';
+    }
+    else {
+        return ( neighbors == 3 ) ? 'X' : '.';
+    }
+}
+
+void GameOfLife::iterate( unsigned int iterations ) {
+    for ( int i = 0; i < iterations; i++ ) {
+        update();
+    }
+}
+
+Glider::Glider( char x , char y ) {
+    xCoord = x;
+    yCoord = y;
+    height = GLIDER_SIZE;
+    width = GLIDER_SIZE;
+    figure = new char*[GLIDER_SIZE];
+    for ( char i = 0; i < GLIDER_SIZE; i++ ) {
+        figure[i] = new char[GLIDER_SIZE];
+    }
+    for ( char i = 0; i < GLIDER_SIZE; i++ ) {
+        for ( char j = 0; j < GLIDER_SIZE; j++ ) {
+            figure[i][j] = '.';
+        }
+    }
+    figure[0][1] = 'X';
+    figure[1][2] = 'X';
+    figure[2][0] = 'X';
+    figure[2][1] = 'X';
+    figure[2][2] = 'X';
+}
+
+Glider::~Glider() {
+    for ( char i = 0; i < GLIDER_SIZE; i++ ) {
+        delete[] figure[i];
+    }
+    delete[] figure;
+}
+
+Blinker::Blinker( char x , char y ) {
+    xCoord = x;
+    yCoord = y;
+    height = BLINKER_HEIGHT;
+    width = BLINKER_WIDTH;
+    figure = new char*[BLINKER_HEIGHT];
+    for ( char i = 0; i < BLINKER_HEIGHT; i++ ) {
+        figure[i] = new char[BLINKER_WIDTH];
+    }
+    for ( char i = 0; i < BLINKER_HEIGHT; i++ ) {
+        for ( char j = 0; j < BLINKER_WIDTH; j++ ) {
+            figure[i][j] = 'X';
+        }
+    }
+}
+
+Blinker::~Blinker() {
+    for ( char i = 0; i < BLINKER_HEIGHT; i++ ) {
+        delete[] figure[i];
+    }
+    delete[] figure;
+}
 
 
 int main()
 {
   sf::RenderWindow window(sf::VideoMode((2+BOARD_SIZE) * (int)TILE_SIZE, (2+BOARD_SIZE) * (int)TILE_SIZE), "Game of Life");
 
-  Game game;
+    GameOfLife gol;
+    gol.addShape(Glider(0,0));
+    gol.addShape(Blinker(10,20));
+    gol.addShape(Glider(10,0));
+    gol.addShape(Blinker(20,10));
+    gol.addShape(Glider(0,10));
+    gol.addShape(Blinker(10,30));
+    gol.addShape(Glider(10,10));
+    gol.addShape(Blinker(30,20));
 
   sf::Clock clock;
 
   while (window.isOpen()) {
     sf::Time elapsed = clock.getElapsedTime();
-    if (elapsed.asSeconds() > 0.2f) {
-      game.iterate();
+    if (elapsed.asSeconds() > 0.01f) {
+      gol.iterate(1);
       clock.restart();
     }
+
 
     sf::Event event;
     while (window.pollEvent(event)) {
@@ -151,19 +258,19 @@ int main()
           return 0;
         }
         if (event.key.code == sf::Keyboard::Space){
-          game.reset();
+          // game.reset();
         }
         if (event.key.code == sf::Keyboard::Left){
-          game.setDirection( Game::Left );
+          // game.setDirection( Game::Left );
         }
         if (event.key.code == sf::Keyboard::Right){
-          game.setDirection( Game::Right );
+          // game.setDirection( Game::Right );
         }
         if (event.key.code == sf::Keyboard::Up){
-          game.setDirection( Game::Up );
+          // game.setDirection( Game::Up );
         }
         if (event.key.code == sf::Keyboard::Down){
-          game.setDirection( Game::Down );
+          // game.setDirection( Game::Down );
         }
 
       }
@@ -174,17 +281,17 @@ int main()
       for ( int y = 0;y<BOARD_SIZE;y++) {
         sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
         shape.setOrigin((x+1)*-TILE_SIZE, (y+1)*-TILE_SIZE);
-        switch (game.getContent(x, y)) {
-        case Game::Empty:
+        switch (gol.getContent(x, y)) {
+        case Empty:
           shape.setFillColor(sf::Color::Black);
           break;
-        case Game::Food:
+        case Food:
           shape.setFillColor(sf::Color::Red);
           break;
-        case Game::Snake:
+        case Snake:
           shape.setFillColor(sf::Color::White);
           break;
-        case Game::Head:
+        case Head:
           shape.setFillColor(sf::Color::Green);
           break;
         }
