@@ -1,11 +1,12 @@
+#include <string.h>
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <random>
 
 #include <iostream>
 
-const int BOARD_SIZE = 40;
-const float TILE_SIZE = 20.0f;
+const int BOARD_SIZE = 100;
+const float TILE_SIZE = 10.0f;
 
 #define HEIGHT BOARD_SIZE
 #define WIDTH BOARD_SIZE
@@ -19,44 +20,99 @@ public:
     char yCoord;
     char height;
     char width;
-    char **figure;
+    const char * const* figure;
 };
+
+const char *rpentomino[] = {
+   ".XX",
+   "XX.",
+   ".X." };
+
+struct RPentomino : public Shape {
+   RPentomino( char x , char y ) {
+      figure = rpentomino;
+      xCoord = x;
+      yCoord = y;
+      height = sizeof( rpentomino ) / sizeof( *rpentomino );
+      width = strlen( rpentomino[0] );
+   }
+};
+
+const char *glider[] = {
+   ".X.",
+   "..X",
+   "XXX" };
 
 struct Glider : public Shape {
-    static const char GLIDER_SIZE = 3;
-    Glider( char x , char y );
-    ~Glider();
+   Glider( char x , char y ) {
+      figure = glider;
+      xCoord = x;
+      yCoord = y;
+      height = sizeof( glider ) / sizeof( *glider );
+      width = strlen( glider[0] );
+   }
 };
+
+const char *blinker[] = {
+   "XXX" };
 
 struct Blinker : public Shape {
-    static const char BLINKER_HEIGHT = 3;
-    static const char BLINKER_WIDTH = 1;
-    Blinker( char x , char y );
-    ~Blinker();
+   Blinker( char x , char y ) {
+      figure = blinker;
+      xCoord = x;
+      yCoord = y;
+      height = sizeof( blinker ) / sizeof( *blinker );
+      width = strlen( blinker[0] );
+   }
 };
 
+const char *almond[] = {
+   ".X.",
+   "X.X",
+   "X.X",
+   ".X." };
+
 struct Almond : public Shape {
-    static const char ALMOND_HEIGHT = 4;
-    static const char ALMOND_WIDTH = 3;
-    Almond( char x , char y );
-    ~Almond();
+   Almond( char x , char y ) {
+      figure = almond;
+      xCoord = x;
+      yCoord = y;
+      height = sizeof( almond ) / sizeof( *almond );
+      width = strlen( almond[0] );
+   }
+};
+
+const char *spaceship[] = {
+   "X...X.",
+   ".....X",
+   "X....X",
+   ".XXXXX" };
+
+struct SpaceShip : public Shape {
+   SpaceShip( char x , char y ) {
+      figure = spaceship;
+      xCoord = x;
+      yCoord = y;
+      height = sizeof( spaceship ) / sizeof( *spaceship );
+      width = strlen( spaceship[0] );
+   }
 };
 
 class GameOfLife {
 public:
-    GameOfLife();
+   GameOfLife();
    void addShape( Shape shape );
 
-    void print();
-    void update();
+   void print();
+   void update();
    void clear();
    content_t getContent( int i, int j);
    char getState( char state , char xCoord , char yCoord , bool toggle);
-    void iterate(unsigned int iterations);
+   void iterate(unsigned int iterations);
 private:
-    char world[HEIGHT][WIDTH];
-    char otherWorld[HEIGHT][WIDTH];
-    bool toggle;
+   char world[HEIGHT][WIDTH];
+   char otherWorld[HEIGHT][WIDTH];
+   bool toggle;
 };
 
 GameOfLife::GameOfLife() :
@@ -194,86 +250,6 @@ void GameOfLife::iterate( unsigned int iterations ) {
     }
 }
 
-Glider::Glider( char x , char y ) {
-    xCoord = x;
-    yCoord = y;
-    height = GLIDER_SIZE;
-    width = GLIDER_SIZE;
-    figure = new char*[GLIDER_SIZE];
-    for ( char i = 0; i < GLIDER_SIZE; i++ ) {
-        figure[i] = new char[GLIDER_SIZE];
-    }
-    for ( char i = 0; i < GLIDER_SIZE; i++ ) {
-        for ( char j = 0; j < GLIDER_SIZE; j++ ) {
-            figure[i][j] = '.';
-        }
-    }
-    figure[0][1] = 'X';
-    figure[1][2] = 'X';
-    figure[2][0] = 'X';
-    figure[2][1] = 'X';
-    figure[2][2] = 'X';
-}
-
-Glider::~Glider() {
-    for ( char i = 0; i < GLIDER_SIZE; i++ ) {
-        delete[] figure[i];
-    }
-    delete[] figure;
-}
-
-Blinker::Blinker( char x , char y ) {
-    xCoord = x;
-    yCoord = y;
-    height = BLINKER_HEIGHT;
-    width = BLINKER_WIDTH;
-    figure = new char*[BLINKER_HEIGHT];
-    for ( char i = 0; i < BLINKER_HEIGHT; i++ ) {
-        figure[i] = new char[BLINKER_WIDTH];
-    }
-    for ( char i = 0; i < BLINKER_HEIGHT; i++ ) {
-        for ( char j = 0; j < BLINKER_WIDTH; j++ ) {
-            figure[i][j] = 'X';
-        }
-    }
-}
-
-Blinker::~Blinker() {
-    for ( char i = 0; i < BLINKER_HEIGHT; i++ ) {
-        delete[] figure[i];
-    }
-    delete[] figure;
-}
-
-Almond::Almond( char x , char y ) {
-    xCoord = x;
-    yCoord = y;
-    height = ALMOND_HEIGHT;
-    width = ALMOND_WIDTH;
-    figure = new char*[ALMOND_HEIGHT];
-    for ( char i = 0; i < ALMOND_HEIGHT; i++ ) {
-        figure[i] = new char[ALMOND_WIDTH];
-    }
-    for ( char i = 0; i < ALMOND_HEIGHT; i++ ) {
-        for ( char j = 0; j < ALMOND_WIDTH; j++ ) {
-            figure[i][j] = '.';
-        }
-    }
-    figure[0][1] = 'X';
-    figure[1][0] = 'X';
-    figure[1][2] = 'X';
-    figure[2][0] = 'X';
-    figure[2][2] = 'X';
-    figure[3][1] = 'X';
-}
-
-Almond::~Almond() {
-    for ( char i = 0; i < ALMOND_HEIGHT; i++ ) {
-        delete[] figure[i];
-    }
-    delete[] figure;
-}
-
 
 int main()
 {
@@ -311,14 +287,23 @@ int main()
         if (event.key.code == sf::Keyboard::A){
            gol.addShape(Almond(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
         }
+        if (event.key.code == sf::Keyboard::S){
+           gol.addShape(SpaceShip(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
+        }
         if (event.key.code == sf::Keyboard::G){
            gol.addShape(Glider(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
+        }
+        if (event.key.code == sf::Keyboard::X){
+           gol.addShape(RPentomino(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
         }
         if (event.key.code == sf::Keyboard::B){
            gol.addShape(Blinker(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
         }
         if (event.key.code == sf::Keyboard::I){
            gol.iterate(1);
+        }
+        if (event.key.code == sf::Keyboard::P){
+           gol.print();
         }
         if (event.key.code == sf::Keyboard::C){
            gol.clear();
@@ -346,7 +331,7 @@ int main()
     for( int x=0;x<BOARD_SIZE;x++ ){
       for ( int y = 0;y<BOARD_SIZE;y++) {
         sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
-        shape.setOrigin((x+1)*-TILE_SIZE, (y+1)*-TILE_SIZE);
+        shape.setOrigin((y+1)*-TILE_SIZE, (x+1)*-TILE_SIZE);
         switch (gol.getContent(x, y)) {
         case Empty:
           shape.setFillColor(sf::Color::Black);
