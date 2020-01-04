@@ -16,11 +16,34 @@ enum content_t {
 
 struct Shape {
 public:
-    char xCoord;
-    char yCoord;
     char height;
     char width;
     const char * const* figure;
+};
+
+const char *crab[] = {
+   "....X.....X....",
+   "....X.....X....",
+   "....XX...XX....",
+   "...............",
+   "XXX..XX.XX..XXX",
+   "..X.X.X.X.X.X..",
+   "....XX...XX....",
+   "...............",
+   "....XX...XX....",
+   "..X.X.X.X.X.X..",
+   "XXX..XX.XX..XXX",
+   "...............",
+   "....XX...XX....",
+   "....X.....X....",
+   "....X.....X...." };
+
+struct Crab : public Shape {
+   Crab() {
+      figure = crab;
+      height = sizeof( crab ) / sizeof( *crab );
+      width = strlen( crab[0] );
+   }
 };
 
 const char *rpentomino[] = {
@@ -29,10 +52,8 @@ const char *rpentomino[] = {
    ".X." };
 
 struct RPentomino : public Shape {
-   RPentomino( char x , char y ) {
+   RPentomino() {
       figure = rpentomino;
-      xCoord = x;
-      yCoord = y;
       height = sizeof( rpentomino ) / sizeof( *rpentomino );
       width = strlen( rpentomino[0] );
    }
@@ -44,10 +65,8 @@ const char *glider[] = {
    "XXX" };
 
 struct Glider : public Shape {
-   Glider( char x , char y ) {
+   Glider() {
       figure = glider;
-      xCoord = x;
-      yCoord = y;
       height = sizeof( glider ) / sizeof( *glider );
       width = strlen( glider[0] );
    }
@@ -57,10 +76,8 @@ const char *blinker[] = {
    "XXX" };
 
 struct Blinker : public Shape {
-   Blinker( char x , char y ) {
+   Blinker() {
       figure = blinker;
-      xCoord = x;
-      yCoord = y;
       height = sizeof( blinker ) / sizeof( *blinker );
       width = strlen( blinker[0] );
    }
@@ -73,10 +90,8 @@ const char *almond[] = {
    ".X." };
 
 struct Almond : public Shape {
-   Almond( char x , char y ) {
+   Almond() {
       figure = almond;
-      xCoord = x;
-      yCoord = y;
       height = sizeof( almond ) / sizeof( *almond );
       width = strlen( almond[0] );
    }
@@ -89,10 +104,8 @@ const char *spaceship[] = {
    ".XXXXX" };
 
 struct SpaceShip : public Shape {
-   SpaceShip( char x , char y ) {
+   SpaceShip() {
       figure = spaceship;
-      xCoord = x;
-      yCoord = y;
       height = sizeof( spaceship ) / sizeof( *spaceship );
       width = strlen( spaceship[0] );
    }
@@ -136,15 +149,22 @@ void GameOfLife::clear() {
 
 void GameOfLife::addShape( Shape shape )
 {
-   for ( char i = shape.yCoord; i - shape.yCoord < shape.height; i++ ) {
-      for ( char j = shape.xCoord; j - shape.xCoord < shape.width; j++ ) {
+   std::uniform_int_distribution<int> randomXLocationRange(0, BOARD_SIZE-shape.width);
+   std::uniform_int_distribution<int> randomYLocationRange(0, BOARD_SIZE-shape.height);
+   std::random_device rd;
+   std::mt19937 randomNumbers(rd());
+
+   char xCoord = randomXLocationRange( randomNumbers );
+   char yCoord = randomYLocationRange( randomNumbers );
+   for ( char i = yCoord; i - yCoord < shape.height; i++ ) {
+      for ( char j = xCoord; j - xCoord < shape.width; j++ ) {
          if ( i < HEIGHT && j < WIDTH ) {
             if ( toggle ) {
                world[i][j] =
-                  shape.figure[ i - shape.yCoord ][j - shape.xCoord ];
+                  shape.figure[ i - yCoord ][j - xCoord ];
             } else {
                otherWorld[i][j] =
-                  shape.figure[ i - shape.yCoord ][j - shape.xCoord ];
+                  shape.figure[ i - yCoord ][j - xCoord ];
             }
          }
       }
@@ -257,10 +277,6 @@ int main()
 
   GameOfLife gol;
 
-  std::uniform_int_distribution<int> randomLocationRange(0, BOARD_SIZE-1);
-  std::random_device rd;
-  std::mt19937 randomNumbers(rd());
-
   sf::Clock clock;
 
   bool running = false;
@@ -285,19 +301,22 @@ int main()
         if (event.key.code == sf::Keyboard::Space){
         }
         if (event.key.code == sf::Keyboard::A){
-           gol.addShape(Almond(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
+           gol.addShape(Almond());
         }
         if (event.key.code == sf::Keyboard::S){
-           gol.addShape(SpaceShip(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
+           gol.addShape(SpaceShip());
         }
         if (event.key.code == sf::Keyboard::G){
-           gol.addShape(Glider(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
+           gol.addShape(Glider());
+        }
+        if (event.key.code == sf::Keyboard::K){
+           gol.addShape(Crab());
         }
         if (event.key.code == sf::Keyboard::X){
-           gol.addShape(RPentomino(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
+           gol.addShape(RPentomino());
         }
         if (event.key.code == sf::Keyboard::B){
-           gol.addShape(Blinker(randomLocationRange( randomNumbers ),randomLocationRange( randomNumbers )));
+           gol.addShape(Blinker());
         }
         if (event.key.code == sf::Keyboard::I){
            gol.iterate(1);
