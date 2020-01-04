@@ -126,10 +126,12 @@ private:
    char world[HEIGHT][WIDTH];
    char otherWorld[HEIGHT][WIDTH];
    bool toggle;
+   std::random_device rd;
+   std::mt19937 randomNumbers;
 };
 
 GameOfLife::GameOfLife() :
-   toggle(true)
+   toggle(true), randomNumbers(rd())
 {
    for ( char i = 0; i < HEIGHT; i++ ) {
       for ( char j = 0; j < WIDTH; j++ ) {
@@ -151,8 +153,6 @@ void GameOfLife::addShape( Shape shape )
 {
    std::uniform_int_distribution<int> randomXLocationRange(0, BOARD_SIZE-shape.width);
    std::uniform_int_distribution<int> randomYLocationRange(0, BOARD_SIZE-shape.height);
-   std::random_device rd;
-   std::mt19937 randomNumbers(rd());
 
    char xCoord = randomXLocationRange( randomNumbers );
    char yCoord = randomYLocationRange( randomNumbers );
@@ -298,8 +298,6 @@ int main()
         if (event.key.code == sf::Keyboard::Escape){
           return 0;
         }
-        if (event.key.code == sf::Keyboard::Space){
-        }
         if (event.key.code == sf::Keyboard::A){
            gol.addShape(Almond());
         }
@@ -312,7 +310,7 @@ int main()
         if (event.key.code == sf::Keyboard::K){
            gol.addShape(Crab());
         }
-        if (event.key.code == sf::Keyboard::X){
+        if (event.key.code == sf::Keyboard::R){
            gol.addShape(RPentomino());
         }
         if (event.key.code == sf::Keyboard::B){
@@ -327,7 +325,7 @@ int main()
         if (event.key.code == sf::Keyboard::C){
            gol.clear();
         }
-        if (event.key.code == sf::Keyboard::R){
+        if (event.key.code == sf::Keyboard::Space){
            running = ! running;
         }
         if (event.key.code == sf::Keyboard::Left){
