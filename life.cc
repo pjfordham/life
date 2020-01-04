@@ -16,8 +16,8 @@ enum content_t {
 
 struct Shape {
 public:
-    char height;
-    char width;
+    int height;
+    int width;
     const char * const* figure;
 };
 
@@ -120,7 +120,7 @@ public:
    void update();
    void clear();
    content_t getContent( int i, int j);
-   char getState( char state , char xCoord , char yCoord , bool toggle);
+   char getState( char state , int xCoord , int yCoord , bool toggle);
    void iterate(unsigned int iterations);
 private:
    char world[HEIGHT][WIDTH];
@@ -133,8 +133,8 @@ private:
 GameOfLife::GameOfLife() :
    toggle(true), randomNumbers(rd())
 {
-   for ( char i = 0; i < HEIGHT; i++ ) {
-      for ( char j = 0; j < WIDTH; j++ ) {
+   for ( int i = 0; i < HEIGHT; i++ ) {
+      for ( int j = 0; j < WIDTH; j++ ) {
          world[i][j] = '.';
       }
    }
@@ -142,8 +142,8 @@ GameOfLife::GameOfLife() :
 
 void GameOfLife::clear() {
    toggle = true;
-   for ( char i = 0; i < HEIGHT; i++ ) {
-      for ( char j = 0; j < WIDTH; j++ ) {
+   for ( int i = 0; i < HEIGHT; i++ ) {
+      for ( int j = 0; j < WIDTH; j++ ) {
          world[i][j] = '.';
       }
    }
@@ -154,10 +154,10 @@ void GameOfLife::addShape( Shape shape )
    std::uniform_int_distribution<int> randomXLocationRange(0, BOARD_SIZE-shape.width);
    std::uniform_int_distribution<int> randomYLocationRange(0, BOARD_SIZE-shape.height);
 
-   char xCoord = randomXLocationRange( randomNumbers );
-   char yCoord = randomYLocationRange( randomNumbers );
-   for ( char i = yCoord; i - yCoord < shape.height; i++ ) {
-      for ( char j = xCoord; j - xCoord < shape.width; j++ ) {
+   int xCoord = randomXLocationRange( randomNumbers );
+   int yCoord = randomYLocationRange( randomNumbers );
+   for ( int i = yCoord; i - yCoord < shape.height; i++ ) {
+      for ( int j = xCoord; j - xCoord < shape.width; j++ ) {
          if ( i < HEIGHT && j < WIDTH ) {
             if ( toggle ) {
                world[i][j] =
@@ -173,21 +173,21 @@ void GameOfLife::addShape( Shape shape )
 
 void GameOfLife::print() {
     if ( toggle ) {
-        for ( char i = 0; i < HEIGHT; i++ ) {
-            for ( char j = 0; j < WIDTH; j++ ) {
+        for ( int i = 0; i < HEIGHT; i++ ) {
+            for ( int j = 0; j < WIDTH; j++ ) {
                 std::cout << world[i][j];
             }
             std::cout << std::endl;
         }
     } else {
-        for ( char i = 0; i < HEIGHT; i++ ) {
-            for ( char j = 0; j < WIDTH; j++ ) {
+        for ( int i = 0; i < HEIGHT; i++ ) {
+            for ( int j = 0; j < WIDTH; j++ ) {
                 std::cout << otherWorld[i][j];
             }
             std::cout << std::endl;
         }
     }
-    for ( char i = 0; i < WIDTH; i++ ) {
+    for ( int i = 0; i < WIDTH; i++ ) {
         std::cout << '=';
     }
     std::cout << std::endl;
@@ -209,16 +209,16 @@ content_t GameOfLife::getContent(int i, int j) {
 
 void GameOfLife::update() {
     if (toggle) {
-        for ( char i = 0; i < HEIGHT; i++ ) {
-            for ( char j = 0; j < WIDTH; j++ ) {
+        for ( int i = 0; i < HEIGHT; i++ ) {
+            for ( int j = 0; j < WIDTH; j++ ) {
                 otherWorld[i][j] =
                     GameOfLife::getState(world[i][j] , i , j , toggle);
             }
         }
         toggle = !toggle;
     } else {
-        for ( char i = 0; i < HEIGHT; i++ ) {
-            for ( char j = 0; j < WIDTH; j++ ) {
+        for ( int i = 0; i < HEIGHT; i++ ) {
+            for ( int j = 0; j < WIDTH; j++ ) {
                 world[i][j] =
                     GameOfLife::getState(otherWorld[i][j] , i , j , toggle);
             }
@@ -227,11 +227,11 @@ void GameOfLife::update() {
     }
 }
 
-char GameOfLife::getState( char state, char yCoord, char xCoord, bool toggle ) {
+char GameOfLife::getState( char state, int yCoord, int xCoord, bool toggle ) {
     char neighbors = 0;
     if ( toggle ) {
-        for ( char i = yCoord - 1; i <= yCoord + 1; i++ ) {
-            for ( char j = xCoord - 1; j <= xCoord + 1; j++ ) {
+        for ( int i = yCoord - 1; i <= yCoord + 1; i++ ) {
+            for ( int j = xCoord - 1; j <= xCoord + 1; j++ ) {
                 if ( i == yCoord && j == xCoord ) {
                     continue;
                 }
@@ -243,8 +243,8 @@ char GameOfLife::getState( char state, char yCoord, char xCoord, bool toggle ) {
             }
         }
     } else {
-        for ( char i = yCoord - 1; i <= yCoord + 1; i++ ) {
-            for ( char j = xCoord - 1; j <= xCoord + 1; j++ ) {
+        for ( int i = yCoord - 1; i <= yCoord + 1; i++ ) {
+            for ( int j = xCoord - 1; j <= xCoord + 1; j++ ) {
                 if ( i == yCoord && j == xCoord ) {
                     continue;
                 }
