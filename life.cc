@@ -344,29 +344,48 @@ int main()
       }
     }
 
+    // Clear window to Blue to do blue boarder.
     window.clear( sf::Color::Blue );
+
+    // draw black background for theatre of life
+    sf::RectangleShape shape(sf::Vector2f(TILE_SIZE*BOARD_SIZE, TILE_SIZE*BOARD_SIZE));
+    shape.setPosition( TILE_SIZE, TILE_SIZE);
+    shape.setFillColor(sf::Color::Black);
+    window.draw(shape);
+
     for( int x=0;x<BOARD_SIZE;x++ ){
       for ( int y = 0;y<BOARD_SIZE;y++) {
-        sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
-        shape.setOrigin((y+1)*-TILE_SIZE, (x+1)*-TILE_SIZE);
-        switch (gol.getContent(x, y)) {
-        case Empty:
-          shape.setFillColor(sf::Color::Black);
-          break;
-        case Food:
-          shape.setFillColor(sf::Color::Red);
-          break;
-        case Snake:
-          shape.setFillColor(sf::Color::White);
-          break;
-        case Head:
-          shape.setFillColor(sf::Color::Green);
-          break;
-        }
-        window.draw(shape);
+         switch (gol.getContent(x, y)) {
+         case Empty:
+            // Do nothing
+            break;
+         case Food:
+         {
+            sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+            shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
+            shape.setFillColor(sf::Color::Red);
+            window.draw(shape);
+         }
+         break;
+         case Snake:
+         {
+            sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+            shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
+            shape.setFillColor(sf::Color::White);
+            window.draw(shape);
+         }
+         break;
+         case Head:
+         {
+            sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+            shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
+            shape.setFillColor(sf::Color::Green);
+            window.draw(shape);
+         }
+         break;
+         }
       }
     }
-
     window.display();
   }
 
