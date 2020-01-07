@@ -1,3 +1,4 @@
+#include <tuple>
 #include <string.h>
 #include <iostream>
 #include <SFML/Graphics.hpp>
@@ -16,105 +17,71 @@ enum content_t {
 
 struct Shape {
 public:
-    int height;
-    int width;
-    const char * const* figure;
+   int height;
+   int width;
+   const char * const* figure;
+   const char *name;
 };
 
-const char *crab[] = {
-   "....X.....X....",
-   "....X.....X....",
-   "....XX...XX....",
-   "...............",
-   "XXX..XX.XX..XXX",
-   "..X.X.X.X.X.X..",
-   "....XX...XX....",
-   "...............",
-   "....XX...XX....",
-   "..X.X.X.X.X.X..",
-   "XXX..XX.XX..XXX",
-   "...............",
-   "....XX...XX....",
-   "....X.....X....",
-   "....X.....X...." };
+#define SubShape( NAME, ... )                             \
+   struct NAME : public Shape {                           \
+      NAME() {                                            \
+         static const char *shape[] = { __VA_ARGS__ };    \
+         static const char *Name = #NAME;                 \
+         name = Name;                                     \
+         figure = shape;                                  \
+         height = sizeof( shape ) / sizeof( *shape );     \
+         width = strlen( shape[0] );                      \
+      }                                                   \
+   };
 
-struct Crab : public Shape {
-   Crab() {
-      figure = crab;
-      height = sizeof( crab ) / sizeof( *crab );
-      width = strlen( crab[0] );
-   }
-};
+SubShape( Crab,                                 \
+          "....X.....X....",                    \
+          "....X.....X....",                    \
+          "....XX...XX....",                    \
+          "...............",                    \
+          "XXX..XX.XX..XXX",                    \
+          "..X.X.X.X.X.X..",                    \
+          "....XX...XX....",                    \
+          "...............",                    \
+          "....XX...XX....",                    \
+          "..X.X.X.X.X.X..",                    \
+          "XXX..XX.XX..XXX",                    \
+          "...............",                    \
+          "....XX...XX....",                    \
+          "....X.....X....",                    \
+          "....X.....X...." )
 
-const char *rpentomino[] = {
-   ".XX",
-   "XX.",
-   ".X." };
+SubShape(RPentomino,                            \
+         ".XX",                                 \
+         "XX.",                                 \
+         ".X." )
 
-struct RPentomino : public Shape {
-   RPentomino() {
-      figure = rpentomino;
-      height = sizeof( rpentomino ) / sizeof( *rpentomino );
-      width = strlen( rpentomino[0] );
-   }
-};
+SubShape(Glider,                                \
+         ".X.",                                 \
+         "..X",                                 \
+         "XXX" )
 
-const char *glider[] = {
-   ".X.",
-   "..X",
-   "XXX" };
+SubShape(Blinker, \
+         "XXX" )
 
-struct Glider : public Shape {
-   Glider() {
-      figure = glider;
-      height = sizeof( glider ) / sizeof( *glider );
-      width = strlen( glider[0] );
-   }
-};
+SubShape(Almond,                                \
+         ".X.",                                 \
+         "X.X",                                 \
+         "X.X",                                 \
+         ".X." )
 
-const char *blinker[] = {
-   "XXX" };
-
-struct Blinker : public Shape {
-   Blinker() {
-      figure = blinker;
-      height = sizeof( blinker ) / sizeof( *blinker );
-      width = strlen( blinker[0] );
-   }
-};
-
-const char *almond[] = {
-   ".X.",
-   "X.X",
-   "X.X",
-   ".X." };
-
-struct Almond : public Shape {
-   Almond() {
-      figure = almond;
-      height = sizeof( almond ) / sizeof( *almond );
-      width = strlen( almond[0] );
-   }
-};
-
-const char *spaceship[] = {
-   "X...X.",
-   ".....X",
-   "X....X",
-   ".XXXXX" };
-
-struct SpaceShip : public Shape {
-   SpaceShip() {
-      figure = spaceship;
-      height = sizeof( spaceship ) / sizeof( *spaceship );
-      width = strlen( spaceship[0] );
-   }
-};
+SubShape(SpaceShip,                             \
+         "X...X.",                              \
+         ".....X",                              \
+         "X....X",                              \
+         ".XXXXX" )
 
 class GameOfLife {
 public:
    GameOfLife();
-   void addShape( Shape shape );
+   void addShape( Shape shape, int xCoord = -1 , int yCoord = -1);
+   void click( int i, int j );
 
    void print();
    void update();
@@ -149,13 +116,33 @@ void GameOfLife::clear() {
    }
 }
 
-void GameOfLife::addShape( Shape shape )
+void GameOfLife::click( int j, int i )
+{
+   if ( toggle ) {
+      if ( world[i][j] == 'X' ){
+         world[i][j] = '.';
+      } else {
+         world[i][j] = 'X';
+      }
+   } else {
+      if ( otherWorld[i][j] == 'X' ){
+         otherWorld[i][j] = '.';
+      } else {
+         otherWorld[i][j] = 'X';
+      }
+   }
+}
+
+void GameOfLife::addShape( Shape shape, int xCoord, int yCoord )
 {
    std::uniform_int_distribution<int> randomXLocationRange(0, BOARD_SIZE-shape.width);
    std::uniform_int_distribution<int> randomYLocationRange(0, BOARD_SIZE-shape.height);
 
-   int xCoord = randomXLocationRange( randomNumbers );
-   int yCoord = randomYLocationRange( randomNumbers );
+   if ( xCoord == -1 )
+      xCoord = randomXLocationRange( randomNumbers );
+   if ( yCoord == -1 )
+      yCoord = randomYLocationRange( randomNumbers );
+
    for ( int i = yCoord; i - yCoord < shape.height; i++ ) {
       for ( int j = xCoord; j - xCoord < shape.width; j++ ) {
          if ( i < HEIGHT && j < WIDTH ) {
@@ -273,121 +260,130 @@ void GameOfLife::iterate( unsigned int iterations ) {
 
 int main()
 {
-  sf::RenderWindow window(sf::VideoMode((2+BOARD_SIZE) * (int)TILE_SIZE, (2+BOARD_SIZE) * (int)TILE_SIZE), "Game of Life");
+   sf::RenderWindow window(sf::VideoMode((2+BOARD_SIZE) * (int)TILE_SIZE, (2+BOARD_SIZE) * (int)TILE_SIZE), "Game of Life");
 
-  GameOfLife gol;
+   GameOfLife gol;
 
-  sf::Clock clock;
+   sf::Clock clock;
 
-  bool running = false;
-  while (window.isOpen()) {
-     if ( running ) {
-        sf::Time elapsed = clock.getElapsedTime();
-        if (elapsed.asSeconds() > 0.05f) {
-           gol.iterate(1);
-           clock.restart();
-        }
-     }
-
-    sf::Event event;
-    while (window.pollEvent(event)) {
-      if (event.type == sf::Event::Closed)
-        window.close();
-      // Respond to key pressed events
-      if (event.type == sf::Event::KeyPressed){
-        if (event.key.code == sf::Keyboard::Escape){
-          return 0;
-        }
-        if (event.key.code == sf::Keyboard::A){
-           gol.addShape(Almond());
-        }
-        if (event.key.code == sf::Keyboard::S){
-           gol.addShape(SpaceShip());
-        }
-        if (event.key.code == sf::Keyboard::G){
-           gol.addShape(Glider());
-        }
-        if (event.key.code == sf::Keyboard::K){
-           gol.addShape(Crab());
-        }
-        if (event.key.code == sf::Keyboard::R){
-           gol.addShape(RPentomino());
-        }
-        if (event.key.code == sf::Keyboard::B){
-           gol.addShape(Blinker());
-        }
-        if (event.key.code == sf::Keyboard::I){
-           gol.iterate(1);
-        }
-        if (event.key.code == sf::Keyboard::P){
-           gol.print();
-        }
-        if (event.key.code == sf::Keyboard::C){
-           gol.clear();
-        }
-        if (event.key.code == sf::Keyboard::Space){
-           running = ! running;
-        }
-        if (event.key.code == sf::Keyboard::Left){
-          // game.setDirection( Game::Left );
-        }
-        if (event.key.code == sf::Keyboard::Right){
-          // game.setDirection( Game::Right );
-        }
-        if (event.key.code == sf::Keyboard::Up){
-          // game.setDirection( Game::Up );
-        }
-        if (event.key.code == sf::Keyboard::Down){
-          // game.setDirection( Game::Down );
-        }
-
+   bool running = false;
+   while (window.isOpen()) {
+      if ( running ) {
+         sf::Time elapsed = clock.getElapsedTime();
+         if (elapsed.asSeconds() > 0.05f) {
+            gol.iterate(1);
+            clock.restart();
+         }
       }
-    }
 
-    // Clear window to Blue to do blue boarder.
-    window.clear( sf::Color::Blue );
+      sf::Event event;
+      while (window.pollEvent(event)) {
+         if (event.type == sf::Event::Closed) {
+            window.close();
+         } else if (event.type == sf::Event::MouseButtonPressed) {
+            if (event.mouseButton.button == sf::Mouse::Left) {
+               gol.click( ((int)event.mouseButton.x / (int)TILE_SIZE ) - 1,
+                          ((int)event.mouseButton.y / (int)TILE_SIZE ) - 1 );
+            } else if (event.mouseButton.button == sf::Mouse::Right) {
+               gol.addShape( RPentomino(),
+                             ((int)event.mouseButton.x / (int)TILE_SIZE ) - 1,
+                             ((int)event.mouseButton.y / (int)TILE_SIZE ) - 1 );
+            }
+         }
+         else if (event.type == sf::Event::KeyPressed) {
+            if (event.key.code == sf::Keyboard::Escape){
+               return 0;
+            }
+            if (event.key.code == sf::Keyboard::A){
+               gol.addShape(Almond());
+            }
+            if (event.key.code == sf::Keyboard::S){
+               gol.addShape(SpaceShip());
+            }
+            if (event.key.code == sf::Keyboard::G){
+               gol.addShape(Glider());
+            }
+            if (event.key.code == sf::Keyboard::K){
+               gol.addShape(Crab());
+            }
+            if (event.key.code == sf::Keyboard::R){
+               gol.addShape(RPentomino());
+            }
+            if (event.key.code == sf::Keyboard::B){
+               gol.addShape(Blinker());
+            }
+            if (event.key.code == sf::Keyboard::I){
+               gol.iterate(1);
+            }
+            if (event.key.code == sf::Keyboard::P){
+               gol.print();
+            }
+            if (event.key.code == sf::Keyboard::C){
+               gol.clear();
+            }
+            if (event.key.code == sf::Keyboard::Space){
+               running = ! running;
+            }
+            if (event.key.code == sf::Keyboard::Left){
+               // game.setDirection( Game::Left );
+            }
+            if (event.key.code == sf::Keyboard::Right){
+               // game.setDirection( Game::Right );
+            }
+            if (event.key.code == sf::Keyboard::Up){
+               // game.setDirection( Game::Up );
+            }
+            if (event.key.code == sf::Keyboard::Down){
+               // game.setDirection( Game::Down );
+            }
 
-    // draw black background for theatre of life
-    sf::RectangleShape shape(sf::Vector2f(TILE_SIZE*BOARD_SIZE, TILE_SIZE*BOARD_SIZE));
-    shape.setPosition( TILE_SIZE, TILE_SIZE);
-    shape.setFillColor(sf::Color::Black);
-    window.draw(shape);
+         }
+      }
 
-    for( int x=0;x<BOARD_SIZE;x++ ){
-      for ( int y = 0;y<BOARD_SIZE;y++) {
-         switch (gol.getContent(x, y)) {
-         case Empty:
-            // Do nothing
+      // Clear window to Blue to do blue boarder.
+      window.clear( sf::Color::Blue );
+
+      // draw black background for theatre of life
+      sf::RectangleShape shape(sf::Vector2f(TILE_SIZE*BOARD_SIZE, TILE_SIZE*BOARD_SIZE));
+      shape.setPosition( TILE_SIZE, TILE_SIZE);
+      shape.setFillColor(sf::Color::Black);
+      window.draw(shape);
+
+      for( int x=0;x<BOARD_SIZE;x++ ){
+         for ( int y = 0;y<BOARD_SIZE;y++) {
+            switch (gol.getContent(x, y)) {
+            case Empty:
+               // Do nothing
+               break;
+            case Food:
+            {
+               sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+               shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
+               shape.setFillColor(sf::Color::Red);
+               window.draw(shape);
+            }
             break;
-         case Food:
-         {
-            sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
-            shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
-            shape.setFillColor(sf::Color::Red);
-            window.draw(shape);
-         }
-         break;
-         case Snake:
-         {
-            sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
-            shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
-            shape.setFillColor(sf::Color::White);
-            window.draw(shape);
-         }
-         break;
-         case Head:
-         {
-            sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
-            shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
-            shape.setFillColor(sf::Color::Green);
-            window.draw(shape);
-         }
-         break;
+            case Snake:
+            {
+               sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+               shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
+               shape.setFillColor(sf::Color::White);
+               window.draw(shape);
+            }
+            break;
+            case Head:
+            {
+               sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+               shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
+               shape.setFillColor(sf::Color::Green);
+               window.draw(shape);
+            }
+            break;
+            }
          }
       }
-    }
-    window.display();
-  }
+      window.display();
+   }
 
-  return 0;
+   return 0;
 }
