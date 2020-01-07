@@ -260,9 +260,14 @@ void GameOfLife::iterate( unsigned int iterations ) {
 
 int main()
 {
-   sf::RenderWindow window(sf::VideoMode((2+BOARD_SIZE) * (int)TILE_SIZE, (2+BOARD_SIZE) * (int)TILE_SIZE), "Game of Life");
 
    GameOfLife gol;
+
+   Shape shapes[] = { Almond(), Glider(), Crab(), RPentomino(), SpaceShip(), Blinker() };
+   int shapeIndex = 0;
+
+   sf::RenderWindow window(sf::VideoMode((2+BOARD_SIZE) * (int)TILE_SIZE, (2+BOARD_SIZE) * (int)TILE_SIZE),
+                           (std::string("Game of Life - ") + std::string( shapes[shapeIndex].name )).c_str() );
 
    sf::Clock clock;
 
@@ -280,12 +285,21 @@ int main()
       while (window.pollEvent(event)) {
          if (event.type == sf::Event::Closed) {
             window.close();
+         } else if (event.type == sf::Event::MouseWheelScrolled) {
+            if(event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel ) {
+               shapeIndex+=event.mouseWheelScroll.delta;
+               if (shapeIndex < 0)
+                  shapeIndex = ( sizeof( shapes ) / sizeof (shapes[0] ) ) - 1;
+               if (shapeIndex >= ( sizeof( shapes ) / sizeof (shapes[0] ) ))
+                  shapeIndex = 0;
+               window.setTitle((std::string("Game of Life - ") + std::string( shapes[shapeIndex].name )).c_str() );
+            }
          } else if (event.type == sf::Event::MouseButtonPressed) {
             if (event.mouseButton.button == sf::Mouse::Left) {
                gol.click( ((int)event.mouseButton.x / (int)TILE_SIZE ) - 1,
                           ((int)event.mouseButton.y / (int)TILE_SIZE ) - 1 );
             } else if (event.mouseButton.button == sf::Mouse::Right) {
-               gol.addShape( RPentomino(),
+               gol.addShape( shapes[ shapeIndex],
                              ((int)event.mouseButton.x / (int)TILE_SIZE ) - 1,
                              ((int)event.mouseButton.y / (int)TILE_SIZE ) - 1 );
             }
@@ -293,24 +307,6 @@ int main()
          else if (event.type == sf::Event::KeyPressed) {
             if (event.key.code == sf::Keyboard::Escape){
                return 0;
-            }
-            if (event.key.code == sf::Keyboard::A){
-               gol.addShape(Almond());
-            }
-            if (event.key.code == sf::Keyboard::S){
-               gol.addShape(SpaceShip());
-            }
-            if (event.key.code == sf::Keyboard::G){
-               gol.addShape(Glider());
-            }
-            if (event.key.code == sf::Keyboard::K){
-               gol.addShape(Crab());
-            }
-            if (event.key.code == sf::Keyboard::R){
-               gol.addShape(RPentomino());
-            }
-            if (event.key.code == sf::Keyboard::B){
-               gol.addShape(Blinker());
             }
             if (event.key.code == sf::Keyboard::I){
                gol.iterate(1);
@@ -322,7 +318,7 @@ int main()
                gol.clear();
             }
             if (event.key.code == sf::Keyboard::Space){
-               running = ! running;
+               running = !running;
             }
             if (event.key.code == sf::Keyboard::Left){
                // game.setDirection( Game::Left );
