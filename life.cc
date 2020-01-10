@@ -266,10 +266,16 @@ int main()
    Shape shapes[] = { Almond(), Glider(), Crab(), RPentomino(), SpaceShip(), Blinker() };
    int shapeIndex = 0;
 
-   sf::RenderWindow window(sf::VideoMode((2+BOARD_SIZE) * (int)TILE_SIZE, (2+BOARD_SIZE) * (int)TILE_SIZE),
-                           (std::string("Game of Life - ") + std::string( shapes[shapeIndex].name )).c_str() );
+   sf::Font font;
+   if (!font.loadFromFile("Instruction.ttf") ) {
+      std::cerr << "Font error." << std::endl;
+      exit( -1 );
+   }
+
+   sf::RenderWindow window(sf::VideoMode((2+BOARD_SIZE) * (int)TILE_SIZE, (2+BOARD_SIZE) * (int)TILE_SIZE), "Game of Life");
 
    sf::Clock clock;
+   sf::Clock messageClock;
 
    bool running = false;
    while (window.isOpen()) {
@@ -287,12 +293,12 @@ int main()
             window.close();
          } else if (event.type == sf::Event::MouseWheelScrolled) {
             if(event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel ) {
+               messageClock.restart();
                shapeIndex+=event.mouseWheelScroll.delta;
                if (shapeIndex < 0)
                   shapeIndex = ( sizeof( shapes ) / sizeof (shapes[0] ) ) - 1;
                if (shapeIndex >= ( sizeof( shapes ) / sizeof (shapes[0] ) ))
                   shapeIndex = 0;
-               window.setTitle((std::string("Game of Life - ") + std::string( shapes[shapeIndex].name )).c_str() );
             }
          } else if (event.type == sf::Event::MouseButtonPressed) {
             if (event.mouseButton.button == sf::Mouse::Left) {
@@ -378,6 +384,17 @@ int main()
             }
          }
       }
+      sf::Time elapsed = messageClock.getElapsedTime();
+      if (elapsed.asSeconds() < 2.0f) {
+         sf::Text text;
+         text.setFont(font);
+         text.setString(shapes[shapeIndex].name);
+         text.setCharacterSize(4*TILE_SIZE); // in pixels, not points!
+         text.setPosition(4*TILE_SIZE, 4*TILE_SIZE);
+         text.setColor(sf::Color::Red);
+         window.draw(text);
+      }
+
       window.display();
    }
 
