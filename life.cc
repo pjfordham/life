@@ -391,7 +391,7 @@ int main()
          text.setString(shapes[shapeIndex].name);
          text.setCharacterSize(4*TILE_SIZE); // in pixels, not points!
          text.setPosition(4*TILE_SIZE, 4*TILE_SIZE);
-         text.setColor(sf::Color::Red);
+         text.setFillColor(sf::Color::Red);
          window.draw(text);
       }
 
