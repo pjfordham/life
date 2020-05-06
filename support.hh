@@ -1,6 +1,8 @@
 #ifndef SUPPORT_FILE_H
 #define SUPPORT_FILE_H
 
+#include <utility>
+
 template<typename type>
 class Array2D {
    int y;
@@ -12,12 +14,12 @@ public:
    Array2D& operator=(const Array2D&) = delete;
 
    Array2D(Array2D&& move) noexcept {
-      y = move.y; move.y = 0;
-      data = move.data; move.data = nullptr;
+      y = std::exchange(move.y, 0);
+      data = std::exchange(move.data, nullptr);
    }
    Array2D& operator=(Array2D&& move) noexcept {
-      y = move.y; move.y = 0;
-      data = move.data; move.data = nullptr;
+      std::swap(y, move.y);
+      std::swap(data, move.data);
    }
 
    // implement an iterator that walks whole array
