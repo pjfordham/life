@@ -13,10 +13,10 @@ public:
    Array2D(const Array2D&) = delete;
    Array2D& operator=(const Array2D&) = delete;
 
-   Array2D(Array2D&& move) noexcept {
-      y = std::exchange(move.y, 0);
-      data = std::exchange(move.data, nullptr);
-   }
+   Array2D(Array2D&& move) noexcept :
+      y(std::exchange(move.y, 0)),
+      data(std::exchange(move.data, nullptr)) {}
+
    Array2D& operator=(Array2D&& move) noexcept {
       std::swap(y, move.y);
       std::swap(data, move.data);
