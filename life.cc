@@ -90,11 +90,11 @@ public:
    void update();
    void clear();
    content_t getContent( int i, int j);
-   char getState( char state , int xCoord , int yCoord );
+   int getState( int state , int xCoord , int yCoord );
    void iterate(unsigned int iterations);
 private:
-   Array2D<char> world;
-   Array2D<char> otherWorld;
+   Array2D<int> world;
+   Array2D<int> otherWorld;
 
    std::random_device rd;
    std::mt19937 randomNumbers;
@@ -103,7 +103,7 @@ private:
 GameOfLife::GameOfLife() : world(HEIGHT,WIDTH), otherWorld(HEIGHT,WIDTH), randomNumbers(rd()) {
    for ( int i = 0; i < HEIGHT; i++ ) {
       for ( int j = 0; j < WIDTH; j++ ) {
-         world[i][j] = '.';
+         world[i][j] = 0;
       }
    }
 }
@@ -111,17 +111,17 @@ GameOfLife::GameOfLife() : world(HEIGHT,WIDTH), otherWorld(HEIGHT,WIDTH), random
 void GameOfLife::clear() {
    for ( int i = 0; i < HEIGHT; i++ ) {
       for ( int j = 0; j < WIDTH; j++ ) {
-         world[i][j] = '.';
+         world[i][j] = 0;
       }
    }
 }
 
 void GameOfLife::click( int j, int i )
 {
-   if ( world[i][j] == 'X' ){
-      world[i][j] = '.';
+   if ( world[i][j] == 1 ){
+      world[i][j] = 0;
    } else {
-      world[i][j] = 'X';
+      world[i][j] = 1;
    }
 }
 
@@ -139,7 +139,7 @@ void GameOfLife::addShape( Shape shape, int xCoord, int yCoord )
       for ( int j = xCoord; j - xCoord < shape.width; j++ ) {
          if ( i < HEIGHT && j < WIDTH ) {
             world[i][j] =
-               shape.figure[ i - yCoord ][j - xCoord ];
+               shape.figure[ i - yCoord ][j - xCoord ] == 'X' ? 1 : 0;
          }
       }
    }
@@ -162,7 +162,7 @@ content_t GameOfLife::getContent(int i, int j) {
    int content;
    content = world[i][j];
    switch (content) {
-   case 'X': return Head;
+   case 1: return Head;
    default:
       return Empty;
    }
@@ -178,25 +178,25 @@ void GameOfLife::update() {
    std::swap(world, otherWorld);
 }
 
-char GameOfLife::getState( char state, int yCoord, int xCoord ) {
-    char neighbors = 0;
+int GameOfLife::getState( int state, int yCoord, int xCoord ) {
+    int neighbors = 0;
     for ( int i = yCoord - 1; i <= yCoord + 1; i++ ) {
        for ( int j = xCoord - 1; j <= xCoord + 1; j++ ) {
           if ( i == yCoord && j == xCoord ) {
              continue;
           }
           if ( i > -1 && i < HEIGHT && j > -1 && j < WIDTH ) {
-             if ( world[i][j] == 'X' ) {
+             if ( world[i][j] == 1 ) {
                 neighbors++;
              }
           }
        }
     }
-    if (state == 'X') {
-       return ( neighbors > 1 && neighbors < 4 ) ? 'X' : '.';
+    if (state == 1) {
+       return ( neighbors > 1 && neighbors < 4 ) ? 1 : 0;
     }
     else {
-       return ( neighbors == 3 ) ? 'X' : '.';
+       return ( neighbors == 3 ) ? 1 : 0;
     }
 }
 
