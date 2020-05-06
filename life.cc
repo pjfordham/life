@@ -12,8 +12,8 @@
 const int BOARD_SIZE = 100;
 const float TILE_SIZE = 10.0f;
 
-#define HEIGHT BOARD_SIZE
-#define WIDTH BOARD_SIZE
+const int HEIGHT=BOARD_SIZE;
+const int WIDTH=BOARD_SIZE;
 
 enum content_t {
     Snake, Food, Empty, Head };
@@ -93,19 +93,17 @@ public:
    char getState( char state , int xCoord , int yCoord );
    void iterate(unsigned int iterations);
 private:
-   Array2D<char> *world;
-   Array2D<char> *otherWorld;
-   
+   Array2D<char> world;
+   Array2D<char> otherWorld;
+
    std::random_device rd;
    std::mt19937 randomNumbers;
 };
 
-GameOfLife::GameOfLife() :
-   world(new Array2D<char>(HEIGHT,WIDTH)), otherWorld(new Array2D<char>(HEIGHT,WIDTH)), randomNumbers(rd())
-{
+GameOfLife::GameOfLife() : world(HEIGHT,WIDTH), otherWorld(HEIGHT,WIDTH), randomNumbers(rd()) {
    for ( int i = 0; i < HEIGHT; i++ ) {
       for ( int j = 0; j < WIDTH; j++ ) {
-         (*world)[i][j] = '.';
+         world[i][j] = '.';
       }
    }
 }
@@ -113,17 +111,17 @@ GameOfLife::GameOfLife() :
 void GameOfLife::clear() {
    for ( int i = 0; i < HEIGHT; i++ ) {
       for ( int j = 0; j < WIDTH; j++ ) {
-         (*world)[i][j] = '.';
+         world[i][j] = '.';
       }
    }
 }
 
 void GameOfLife::click( int j, int i )
 {
-   if ( (*world)[i][j] == 'X' ){
-      (*world)[i][j] = '.';
+   if ( world[i][j] == 'X' ){
+      world[i][j] = '.';
    } else {
-      (*world)[i][j] = 'X';
+      world[i][j] = 'X';
    }
 }
 
@@ -140,7 +138,7 @@ void GameOfLife::addShape( Shape shape, int xCoord, int yCoord )
    for ( int i = yCoord; i - yCoord < shape.height; i++ ) {
       for ( int j = xCoord; j - xCoord < shape.width; j++ ) {
          if ( i < HEIGHT && j < WIDTH ) {
-            (*world)[i][j] =
+            world[i][j] =
                shape.figure[ i - yCoord ][j - xCoord ];
          }
       }
@@ -150,7 +148,7 @@ void GameOfLife::addShape( Shape shape, int xCoord, int yCoord )
 void GameOfLife::print() {
    for ( int i = 0; i < HEIGHT; i++ ) {
       for ( int j = 0; j < WIDTH; j++ ) {
-         std::cout << (*world)[i][j];
+         std::cout << world[i][j];
       }
       std::cout << std::endl;
    }
@@ -162,7 +160,7 @@ void GameOfLife::print() {
 
 content_t GameOfLife::getContent(int i, int j) {
    int content;
-   content = (*world)[i][j];
+   content = world[i][j];
    switch (content) {
    case 'X': return Head;
    default:
@@ -173,8 +171,8 @@ content_t GameOfLife::getContent(int i, int j) {
 void GameOfLife::update() {
    for ( int i = 0; i < HEIGHT; i++ ) {
       for ( int j = 0; j < WIDTH; j++ ) {
-         (*otherWorld)[i][j] =
-            GameOfLife::getState((*world)[i][j] , i , j);
+         otherWorld[i][j] =
+            GameOfLife::getState(world[i][j] , i , j);
       }
    }
    std::swap(world, otherWorld);
@@ -188,7 +186,7 @@ char GameOfLife::getState( char state, int yCoord, int xCoord ) {
              continue;
           }
           if ( i > -1 && i < HEIGHT && j > -1 && j < WIDTH ) {
-             if ( (*world)[i][j] == 'X' ) {
+             if ( world[i][j] == 'X' ) {
                 neighbors++;
              }
           }

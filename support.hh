@@ -6,11 +6,19 @@ class Array2D {
    int y;
    type *data;
 public:
-   // Implement these properly if needed
+   // We can't do a copy since we don't know
+   // what size to allocate the array.
    Array2D(const Array2D&) = delete;
    Array2D& operator=(const Array2D&) = delete;
-   Array2D(const Array2D&&) = delete;
-   Array2D& operator=(const Array2D&&) = delete;
+
+   Array2D(Array2D&& move) noexcept {
+      y = move.y; move.y = 0;
+      data = move.data; move.data = nullptr;
+   }
+   Array2D& operator=(Array2D&& move) noexcept {
+      y = move.y; move.y = 0;
+      data = move.data; move.data = nullptr;
+   }
 
    // implement an iterator that walks whole array
    // have some get x,y pos maybe too to optimize other stuff
