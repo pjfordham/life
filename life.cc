@@ -5,6 +5,9 @@
 #include <random>
 
 #include <iostream>
+#include <utility>
+
+#include "support.hh"
 
 const int BOARD_SIZE = 100;
 const float TILE_SIZE = 10.0f;
@@ -87,49 +90,40 @@ public:
    void update();
    void clear();
    content_t getContent( int i, int j);
-   char getState( char state , int xCoord , int yCoord , bool toggle);
+   char getState( char state , int xCoord , int yCoord );
    void iterate(unsigned int iterations);
 private:
-   char world[HEIGHT][WIDTH];
-   char otherWorld[HEIGHT][WIDTH];
-   bool toggle;
+   Array2D<char> *world;
+   Array2D<char> *otherWorld;
+   
    std::random_device rd;
    std::mt19937 randomNumbers;
 };
 
 GameOfLife::GameOfLife() :
-   toggle(true), randomNumbers(rd())
+   world(new Array2D<char>(HEIGHT,WIDTH)), otherWorld(new Array2D<char>(HEIGHT,WIDTH)), randomNumbers(rd())
 {
    for ( int i = 0; i < HEIGHT; i++ ) {
       for ( int j = 0; j < WIDTH; j++ ) {
-         world[i][j] = '.';
+         (*world)[i][j] = '.';
       }
    }
 }
 
 void GameOfLife::clear() {
-   toggle = true;
    for ( int i = 0; i < HEIGHT; i++ ) {
       for ( int j = 0; j < WIDTH; j++ ) {
-         world[i][j] = '.';
+         (*world)[i][j] = '.';
       }
    }
 }
 
 void GameOfLife::click( int j, int i )
 {
-   if ( toggle ) {
-      if ( world[i][j] == 'X' ){
-         world[i][j] = '.';
-      } else {
-         world[i][j] = 'X';
-      }
+   if ( (*world)[i][j] == 'X' ){
+      (*world)[i][j] = '.';
    } else {
-      if ( otherWorld[i][j] == 'X' ){
-         otherWorld[i][j] = '.';
-      } else {
-         otherWorld[i][j] = 'X';
-      }
+      (*world)[i][j] = 'X';
    }
 }
 
@@ -146,47 +140,29 @@ void GameOfLife::addShape( Shape shape, int xCoord, int yCoord )
    for ( int i = yCoord; i - yCoord < shape.height; i++ ) {
       for ( int j = xCoord; j - xCoord < shape.width; j++ ) {
          if ( i < HEIGHT && j < WIDTH ) {
-            if ( toggle ) {
-               world[i][j] =
-                  shape.figure[ i - yCoord ][j - xCoord ];
-            } else {
-               otherWorld[i][j] =
-                  shape.figure[ i - yCoord ][j - xCoord ];
-            }
+            (*world)[i][j] =
+               shape.figure[ i - yCoord ][j - xCoord ];
          }
       }
    }
 }
 
 void GameOfLife::print() {
-    if ( toggle ) {
-        for ( int i = 0; i < HEIGHT; i++ ) {
-            for ( int j = 0; j < WIDTH; j++ ) {
-                std::cout << world[i][j];
-            }
-            std::cout << std::endl;
-        }
-    } else {
-        for ( int i = 0; i < HEIGHT; i++ ) {
-            for ( int j = 0; j < WIDTH; j++ ) {
-                std::cout << otherWorld[i][j];
-            }
-            std::cout << std::endl;
-        }
-    }
-    for ( int i = 0; i < WIDTH; i++ ) {
-        std::cout << '=';
-    }
-    std::cout << std::endl;
+   for ( int i = 0; i < HEIGHT; i++ ) {
+      for ( int j = 0; j < WIDTH; j++ ) {
+         std::cout << (*world)[i][j];
+      }
+      std::cout << std::endl;
+   }
+   for ( int i = 0; i < WIDTH; i++ ) {
+      std::cout << '=';
+   }
+   std::cout << std::endl;
 }
 
 content_t GameOfLife::getContent(int i, int j) {
    int content;
-   if ( toggle ) {
-      content = world[i][j];
-   } else {
-      content = otherWorld[i][j];
-   }
+   content = (*world)[i][j];
    switch (content) {
    case 'X': return Head;
    default:
@@ -195,59 +171,34 @@ content_t GameOfLife::getContent(int i, int j) {
 }
 
 void GameOfLife::update() {
-    if (toggle) {
-        for ( int i = 0; i < HEIGHT; i++ ) {
-            for ( int j = 0; j < WIDTH; j++ ) {
-                otherWorld[i][j] =
-                    GameOfLife::getState(world[i][j] , i , j , toggle);
-            }
-        }
-        toggle = !toggle;
-    } else {
-        for ( int i = 0; i < HEIGHT; i++ ) {
-            for ( int j = 0; j < WIDTH; j++ ) {
-                world[i][j] =
-                    GameOfLife::getState(otherWorld[i][j] , i , j , toggle);
-            }
-        }
-        toggle = !toggle;
-    }
+   for ( int i = 0; i < HEIGHT; i++ ) {
+      for ( int j = 0; j < WIDTH; j++ ) {
+         (*otherWorld)[i][j] =
+            GameOfLife::getState((*world)[i][j] , i , j);
+      }
+   }
+   std::swap(world, otherWorld);
 }
 
-char GameOfLife::getState( char state, int yCoord, int xCoord, bool toggle ) {
+char GameOfLife::getState( char state, int yCoord, int xCoord ) {
     char neighbors = 0;
-    if ( toggle ) {
-        for ( int i = yCoord - 1; i <= yCoord + 1; i++ ) {
-            for ( int j = xCoord - 1; j <= xCoord + 1; j++ ) {
-                if ( i == yCoord && j == xCoord ) {
-                    continue;
-                }
-                if ( i > -1 && i < HEIGHT && j > -1 && j < WIDTH ) {
-                    if ( world[i][j] == 'X' ) {
-                        neighbors++;
-                    }
-                }
-            }
-        }
-    } else {
-        for ( int i = yCoord - 1; i <= yCoord + 1; i++ ) {
-            for ( int j = xCoord - 1; j <= xCoord + 1; j++ ) {
-                if ( i == yCoord && j == xCoord ) {
-                    continue;
-                }
-                if ( i > -1 && i < HEIGHT && j > -1 && j < WIDTH ) {
-                    if ( otherWorld[i][j] == 'X' ) {
-                        neighbors++;
-                    }
-                }
-            }
-        }
+    for ( int i = yCoord - 1; i <= yCoord + 1; i++ ) {
+       for ( int j = xCoord - 1; j <= xCoord + 1; j++ ) {
+          if ( i == yCoord && j == xCoord ) {
+             continue;
+          }
+          if ( i > -1 && i < HEIGHT && j > -1 && j < WIDTH ) {
+             if ( (*world)[i][j] == 'X' ) {
+                neighbors++;
+             }
+          }
+       }
     }
     if (state == 'X') {
-        return ( neighbors > 1 && neighbors < 4 ) ? 'X' : '.';
+       return ( neighbors > 1 && neighbors < 4 ) ? 'X' : '.';
     }
     else {
-        return ( neighbors == 3 ) ? 'X' : '.';
+       return ( neighbors == 3 ) ? 'X' : '.';
     }
 }
 
