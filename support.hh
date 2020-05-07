@@ -28,9 +28,15 @@ public:
    Array2D( int _x, int _y ) : y(_y) {
       data = new type[_x*y];
    }
+
+   type const *operator[](int i) const {
+      return data + (i * y);
+   }
+
    type *operator[](int i) {
       return data + (i * y);
    }
+
    ~Array2D() {
       delete[] data;
    }
