@@ -15,9 +15,6 @@ const float TILE_SIZE = 10.0f;
 const int HEIGHT=BOARD_SIZE;
 const int WIDTH=BOARD_SIZE;
 
-enum content_t {
-    Snake, Food, Empty, Head };
-
 struct Shape {
 public:
    int height;
@@ -94,7 +91,7 @@ public:
    void print();
    void update();
    void clear();
-   content_t getContent( int i, int j);
+   state_t getContent( int i, int j);
    state_t getState( state_t state , int x , int y );
    void iterate(unsigned int iterations);
 private:
@@ -159,14 +156,8 @@ void GameOfLife::print() {
    std::cout << std::endl;
 }
 
-content_t GameOfLife::getContent(int i, int j) {
-   int content;
-   content = world[i][j];
-   switch (content) {
-   case LIVE: return Head;
-   default:
-      return Empty;
-   }
+GameOfLife::state_t GameOfLife::getContent(int i, int j) {
+   return world[i][j];
 }
 
 void GameOfLife::update() {
@@ -304,26 +295,10 @@ int main()
       for( int x=0;x<BOARD_SIZE;x++ ){
          for ( int y = 0;y<BOARD_SIZE;y++) {
             switch (gol.getContent(x, y)) {
-            case Empty:
+            case GameOfLife::DEAD:
                // Do nothing
                break;
-            case Food:
-            {
-               sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
-               shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
-               shape.setFillColor(sf::Color::Red);
-               window.draw(shape);
-            }
-            break;
-            case Snake:
-            {
-               sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
-               shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
-               shape.setFillColor(sf::Color::White);
-               window.draw(shape);
-            }
-            break;
-            case Head:
+            case GameOfLife::LIVE:
             {
                sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
                shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
