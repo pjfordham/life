@@ -15,6 +15,9 @@ const float TILE_SIZE = 10.0f;
 const int HEIGHT=BOARD_SIZE;
 const int WIDTH=BOARD_SIZE;
 
+const int LIVE = 10;
+const int DEAD = 0;
+
 enum content_t {
     Snake, Food, Empty, Head };
 
@@ -101,27 +104,23 @@ private:
 };
 
 GameOfLife::GameOfLife() : world(HEIGHT,WIDTH), otherWorld(HEIGHT,WIDTH), randomNumbers(rd()) {
-   for ( int i = 0; i < HEIGHT; i++ ) {
-      for ( int j = 0; j < WIDTH; j++ ) {
-         world[i][j] = 0;
-      }
-   }
+   clear();
 }
 
 void GameOfLife::clear() {
    for ( int i = 0; i < HEIGHT; i++ ) {
       for ( int j = 0; j < WIDTH; j++ ) {
-         world[i][j] = 0;
+         world[i][j] = DEAD;
       }
    }
 }
 
 void GameOfLife::click( int j, int i )
 {
-   if ( world[i][j] == 1 ){
-      world[i][j] = 0;
+   if ( world[i][j] == LIVE ){
+      world[i][j] = DEAD;
    } else {
-      world[i][j] = 1;
+      world[i][j] = LIVE;
    }
 }
 
@@ -139,7 +138,7 @@ void GameOfLife::addShape( Shape shape, int xCoord, int yCoord )
       for ( int j = xCoord; j - xCoord < shape.width; j++ ) {
          if ( i < HEIGHT && j < WIDTH ) {
             world[i][j] =
-               shape.figure[ i - yCoord ][j - xCoord ] == 'X' ? 1 : 0;
+               shape.figure[ i - yCoord ][j - xCoord ] == 'X' ? LIVE : DEAD;
          }
       }
    }
@@ -162,7 +161,7 @@ content_t GameOfLife::getContent(int i, int j) {
    int content;
    content = world[i][j];
    switch (content) {
-   case 1: return Head;
+   case LIVE: return Head;
    default:
       return Empty;
    }
@@ -186,17 +185,17 @@ int GameOfLife::getState( int state, int yCoord, int xCoord ) {
              continue;
           }
           if ( i > -1 && i < HEIGHT && j > -1 && j < WIDTH ) {
-             if ( world[i][j] == 1 ) {
+             if ( world[i][j] == LIVE ) {
                 neighbors++;
              }
           }
        }
     }
-    if (state == 1) {
-       return ( neighbors > 1 && neighbors < 4 ) ? 1 : 0;
+    if (state == LIVE) {
+       return ( neighbors > 1 && neighbors < 4 ) ? LIVE : DEAD;
     }
     else {
-       return ( neighbors == 3 ) ? 1 : 0;
+       return ( neighbors == 3 ) ? LIVE : DEAD;
     }
 }
 
