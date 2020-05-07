@@ -15,9 +15,6 @@ const float TILE_SIZE = 10.0f;
 const int HEIGHT=BOARD_SIZE;
 const int WIDTH=BOARD_SIZE;
 
-const int LIVE = 10;
-const int DEAD = 0;
-
 enum content_t {
     Snake, Food, Empty, Head };
 
@@ -85,6 +82,11 @@ SubShape(SpaceShip,                             \
 
 class GameOfLife {
 public:
+   enum state_t {
+      LIVE = 10,
+      DEAD = 0,
+   };
+
    GameOfLife();
    void addShape( Shape shape, int x = -1 , int y = -1);
    void click( int i, int j );
@@ -93,11 +95,11 @@ public:
    void update();
    void clear();
    content_t getContent( int i, int j);
-   int getState( int state , int x , int y );
+   state_t getState( state_t state , int x , int y );
    void iterate(unsigned int iterations);
 private:
-   Array2D<int> world;
-   Array2D<int> otherWorld;
+   Array2D<state_t> world;
+   Array2D<state_t> otherWorld;
 
    std::random_device rd;
    std::mt19937 randomNumbers;
@@ -177,7 +179,7 @@ void GameOfLife::update() {
    std::swap(world, otherWorld);
 }
 
-int GameOfLife::getState( int state, int y, int x ) {
+GameOfLife::state_t GameOfLife::getState( state_t state, int y, int x ) {
     int neighbors = 0;
     for ( int i = y - 1; i <= y + 1; i++ ) {
        for ( int j = x - 1; j <= x + 1; j++ ) {
