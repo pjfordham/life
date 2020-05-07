@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <utility>
+#include <algorithm>
 
 #include "support.hh"
 
@@ -79,10 +80,9 @@ SubShape(SpaceShip,                             \
 
 class GameOfLife {
 public:
-   enum state_t {
-      LIVE = 10,
-      DEAD = 0,
-   };
+
+   static const int LIVE = 100;
+   static const int DEAD = 0;
 
    GameOfLife();
    void addShape( Shape shape, int x = -1 , int y = -1);
@@ -91,12 +91,12 @@ public:
    void print();
    void update();
    void clear();
-   state_t getContent( int i, int j);
-   state_t getState( state_t state , int x , int y );
+   int getContent( int i, int j);
+   int getState( int state , int x , int y );
    void iterate(unsigned int iterations);
 private:
-   Array2D<state_t> world;
-   Array2D<state_t> otherWorld;
+   Array2D<int> world;
+   Array2D<int> otherWorld;
 
    std::random_device rd;
    std::mt19937 randomNumbers;
@@ -156,7 +156,7 @@ void GameOfLife::print() {
    std::cout << std::endl;
 }
 
-GameOfLife::state_t GameOfLife::getContent(int i, int j) {
+int GameOfLife::getContent(int i, int j) {
    return world[i][j];
 }
 
@@ -170,7 +170,7 @@ void GameOfLife::update() {
    std::swap(world, otherWorld);
 }
 
-GameOfLife::state_t GameOfLife::getState( state_t state, int y, int x ) {
+int GameOfLife::getState( int state, int y, int x ) {
     int neighbors = 0;
     for ( int i = y - 1; i <= y + 1; i++ ) {
        for ( int j = x - 1; j <= x + 1; j++ ) {
@@ -185,10 +185,10 @@ GameOfLife::state_t GameOfLife::getState( state_t state, int y, int x ) {
        }
     }
     if (state == LIVE) {
-       return ( neighbors > 1 && neighbors < 4 ) ? LIVE : DEAD;
+       return ( neighbors > 1 && neighbors < 4 ) ? LIVE : std::max( 0, world[y][x]-1);
     }
     else {
-       return ( neighbors == 3 ) ? LIVE : DEAD;
+       return ( neighbors == 3 ) ? LIVE : std::max(0, world[y][x]-1);
     }
 }
 
@@ -294,7 +294,8 @@ int main()
 
       for( int x=0;x<BOARD_SIZE;x++ ){
          for ( int y = 0;y<BOARD_SIZE;y++) {
-            switch (gol.getContent(x, y)) {
+            auto content = gol.getContent(x, y);
+            switch ( content ) {
             case GameOfLife::DEAD:
                // Do nothing
                break;
@@ -304,8 +305,16 @@ int main()
                shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
                shape.setFillColor(sf::Color::Green);
                window.draw(shape);
+               break;
             }
-            break;
+            default:
+            {
+               sf::RectangleShape shape(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+               shape.setPosition((y+1)*TILE_SIZE, (x+1)*TILE_SIZE);
+               shape.setFillColor(sf::Color::Green * sf::Color(content,content,content));
+               window.draw(shape);
+               break;
+            }
             }
          }
       }
