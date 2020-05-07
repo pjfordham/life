@@ -86,14 +86,14 @@ SubShape(SpaceShip,                             \
 class GameOfLife {
 public:
    GameOfLife();
-   void addShape( Shape shape, int xCoord = -1 , int yCoord = -1);
+   void addShape( Shape shape, int x = -1 , int y = -1);
    void click( int i, int j );
 
    void print();
    void update();
    void clear();
    content_t getContent( int i, int j);
-   int getState( int state , int xCoord , int yCoord );
+   int getState( int state , int x , int y );
    void iterate(unsigned int iterations);
 private:
    Array2D<int> world;
@@ -124,21 +124,21 @@ void GameOfLife::click( int j, int i )
    }
 }
 
-void GameOfLife::addShape( Shape shape, int xCoord, int yCoord )
+void GameOfLife::addShape( Shape shape, int x, int y )
 {
    std::uniform_int_distribution<int> randomXLocationRange(0, BOARD_SIZE-shape.width);
    std::uniform_int_distribution<int> randomYLocationRange(0, BOARD_SIZE-shape.height);
 
-   if ( xCoord == -1 )
-      xCoord = randomXLocationRange( randomNumbers );
-   if ( yCoord == -1 )
-      yCoord = randomYLocationRange( randomNumbers );
+   if ( x == -1 )
+      x = randomXLocationRange( randomNumbers );
+   if ( y == -1 )
+      y = randomYLocationRange( randomNumbers );
 
-   for ( int i = yCoord; i - yCoord < shape.height; i++ ) {
-      for ( int j = xCoord; j - xCoord < shape.width; j++ ) {
+   for ( int i = y; i - y < shape.height; i++ ) {
+      for ( int j = x; j - x < shape.width; j++ ) {
          if ( i < HEIGHT && j < WIDTH ) {
             world[i][j] =
-               shape.figure[ i - yCoord ][j - xCoord ] == 'X' ? LIVE : DEAD;
+               shape.figure[ i - y ][j - x ] == 'X' ? LIVE : DEAD;
          }
       }
    }
@@ -177,11 +177,11 @@ void GameOfLife::update() {
    std::swap(world, otherWorld);
 }
 
-int GameOfLife::getState( int state, int yCoord, int xCoord ) {
+int GameOfLife::getState( int state, int y, int x ) {
     int neighbors = 0;
-    for ( int i = yCoord - 1; i <= yCoord + 1; i++ ) {
-       for ( int j = xCoord - 1; j <= xCoord + 1; j++ ) {
-          if ( i == yCoord && j == xCoord ) {
+    for ( int i = y - 1; i <= y + 1; i++ ) {
+       for ( int j = x - 1; j <= x + 1; j++ ) {
+          if ( i == y && j == x ) {
              continue;
           }
           if ( i > -1 && i < HEIGHT && j > -1 && j < WIDTH ) {
